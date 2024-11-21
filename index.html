@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="author" content="Juan Pablo Pinedo">
+  <title>Commission Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crete+Round&family=Lexend&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <div class="card">
+    <h1>Commission Calculator</h1>
+    <article id="output"></article>
+  </div>
+
+  <script type="text/javascript">
+    let running = true; // set default state of the program
+    let values = [0]; // array to store numbers
+    let userInput; // user input set as undefined by default
+    let userName; // user name
+    const prompts = { // stores all prompt texts
+      numberText: 'Please enter the dollar amount of a single sale at a time.',
+      doneText: 'Enter "Done" when you are finished.',
+      nameText: 'Please enter your name.'
+    }
+    const errors = { // stores all error texts
+      emptyInput: 'Error: No response detected. Please write your your response below.',
+      nullInput: `Error: Operation canceled. ${prompts.doneText}`,
+      nanInput: 'Error: Not a valid number. Please enter a valid number.',
+      invalidName: 'Error: Invalid name. Please enter a valid name.'
+    }
+    const commissionRates = [ // values to compare later
+      { min: 0, max: 0, rate: 0 }, 
+      { min: 0.01, max: 499.99, rate: 0.05 }, 
+      { min: 500.00, max: 999.99, rate: 0.10 }, 
+      { min: 1000, max: Infinity, rate: 0.15 } 
+    ];
+
+    while(running) {
+
+      // user cancelled the prompt
+      if (userInput === null) {
+        alert(errors.nullInput);
+        userInput = undefined;
+
+      // user didn't write anything
+      } else if(userInput?.trim() === "") {
+        alert(errors.emptyInput);
+        userInput = undefined;
+
+      // user wants to terminate the loop
+      } else if(userInput?.toLowerCase() === "done") {
+        // check if the username was entered before ending the loop
+        if(userName !== undefined) running = false;
+        else {
+          // no username detected, show error
+          alert(errors.invalidName);
+          userInput = undefined;
+        }
+
+      // no player name, ask for it
+      } else if(userInput === undefined && userName === undefined) {
+        userInput = prompt(prompts.nameText);
+
+      // assume it's the user's name
+      } else if(isNaN(userInput) && userName === undefined) {
+        userName = userInput;
+        userInput = undefined;
+
+      } else if(userInput === undefined && userName !== undefined) {
+        userInput = prompt(`Hi ${userName}, ${prompts.numberText} ${prompts.doneText}`);
+      // assume it's an amount
+      } else {
+        let amount = parseFloat(userInput);
+
+        // handle invalid amount
+        if(isNaN(amount)) {
+          alert(errors.nanInput);
+
+        // store individual sale
+        } else {
+          values.push(amount);
+          userInput = undefined;
+        }
+      }
+    }
+
+    // report data initialization
+    const report = {
+      salesTotal: values.reduce((acc, curr) => acc + curr ),
+      rate: 0,
+      earnings: 0,
+      total: 0,
+    }
+
+    // traverse the commision rate array
+    for (const rate of commissionRates) {
+      // compare every the for a match
+      if (report.salesTotal >= rate.min && report.salesTotal <= rate.max) {
+        // set report data
+        report.rate = rate.rate * 100;
+        report.earnings = report.salesTotal * rate.rate;
+        report.total = report.earnings + report.salesTotal;
+      }
+    }
+
+    // create html with report data
+    let output = `<p>Hello <span id="user-name">${userName}</span>, Here is your Weekly Commission Report.</p>`;
+    output += `<p>Your sales total is <span class="money">$${report.salesTotal.toFixed(2)}</span>, so your commission rate is <span class="money">${report.rate.toFixed(2)}%</span>.</p>`;
+    output += `<p>Your total commission is <span class="money">$${report.earnings.toFixed(2)}</span>.</p>`;
+    output += `<p>Your total earnings are <span class="money">$${report.total.toFixed(2)}</span>.</p>`;
+
+    // render output in the document
+    document.getElementById('output').innerHTML = output;
+
+  </script>
+</body>
+</html>
